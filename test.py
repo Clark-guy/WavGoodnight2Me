@@ -31,14 +31,14 @@ def genNoise(playSeconds):
     Fs = 44100
     out = np.empty(Fs*playSeconds)
     for x in range(Fs*playSeconds):
-        noise[x] = random.randrange(-2000000000, 2000000000)
+        out[x] = random.randrange(-1, 2)
     return out
 
 def genBlank(playSeconds):
     Fs = 44100
     out = np.empty(Fs*playSeconds)
     for x in range(Fs*playSeconds):
-        noise[x] = 0 
+        out[x] = 0 
     return out
 
 def playAudio(filename):
@@ -55,22 +55,43 @@ def beep(length): #returns a small length array for use to add to another array
 def stringToMorse(inString): #takes input string, converts to array of chars. for each char, adds morse code and then converts to beeps
     pass
 
-
-if __name__ == "__main__":
-    # initialize data, read out sampling frequency
-    Fs, data = read("ez.wav")
+def readWav(filename):
+    Fs, data = read(filename)
     data = data[:,0]
     #print(data.ndim)    #  data is a one dimensional
     #print(type(data))   #  ndim array from numpy
     print("sampling freq: " , Fs)
     print("length of data: ", len(data))
     print("divided by freq (seconds of audio): ", len(data)/Fs)
-    out = genSinWave(10)
+
+def mixAudio(data1, data2):
+    for x in range(len(data1)):
+        data1[x] = .5*data1[x]
+    for x in range(len(data2)):
+        data2[x] = .5*data2[x]
+    # check if arrays are same length, if not, broadcast and then .add(a,b)
+    len1 = len(data1)
+    len2 = len(data2)
+    if len1 !=len2:
+        if len1<len2:
+            np.pad(data1, (0,len2-len1), 'constant')
+        else:
+            np.pad(data2, (0,len1-len2), 'constant')
+    output = data1+data2
+
+
+if __name__ == "__main__":
+    #out = genSinWave(10)
+    #write("out.wav", Fs, out)
+    Fs = 44100
+    morse = stringToMorse("SOS") # generates data for SOS in morse code (returns numpy array)
+    #write("morse.wav", Fs, morse)
+    #playAudio("morse.wav")
+    out = np.empty([])
+    for x in range(5):
+        out = np.concatenate((out, genSinWave(1)), axis=None)
+        out = np.concatenate((out, genNoise(1)), axis=None)
+        out = np.concatenate((out, genBlank(1)), axis=None)
+    plotWav(out)
     write("out.wav", Fs, out)
-    # make noise
-    noise = copy.deepcopy(data)
-    for x in range(len(noise)):
-        noise[x] = random.randrange(-2000000000, 2000000000)
-    #plotWav(data)
-    write("noise.wav", Fs, noise)
-    playAudio("noise.wav")
+    playAudio("out.wav")
