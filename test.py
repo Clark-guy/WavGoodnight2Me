@@ -9,7 +9,7 @@ import copy
 import multiprocessing
 from playsound import playsound
 import math
-
+import sys
 
 def plotWav(data):
     plt.figure()
@@ -22,22 +22,22 @@ def plotWav(data):
 
 def genSinWave(playSeconds):
     Fs = 44100
-    out = np.empty(Fs*playSeconds)
-    for x in range(Fs*playSeconds):
+    out = np.empty(int(Fs*playSeconds))
+    for x in range(int(Fs*playSeconds)):
         out[x] = math.sin(x/20)
     return out
 
 def genNoise(playSeconds):
     Fs = 44100
-    out = np.empty(Fs*playSeconds)
-    for x in range(Fs*playSeconds):
+    out = np.empty(int(Fs*playSeconds))
+    for x in range(int(Fs*playSeconds)):
         out[x] = random.randrange(-1, 2)
     return out
 
 def genBlank(playSeconds):
     Fs = 44100
-    out = np.empty(Fs*playSeconds)
-    for x in range(Fs*playSeconds):
+    out = np.empty(int(Fs*playSeconds))
+    for x in range(int(Fs*playSeconds)):
         out[x] = 0 
     return out
 
@@ -45,12 +45,10 @@ def playAudio(filename):
     print("playing audio")
     p = multiprocessing.Process(target=playsound, args=(filename,))
     p.start()
-    input()
+    input("press enter to stop playback")
     p.terminate()
 
 
-def beep(length): #returns a small length array for use to add to another array
-    pass
 
 def stringToMorse(inString): #takes input string, converts to array of chars. for each char, adds morse code and then converts to beeps
     #first make dict from file
@@ -58,11 +56,27 @@ def stringToMorse(inString): #takes input string, converts to array of chars. fo
     morseDict = {}
     for line in f:
         morseDict[line[0]] = line[1:-1]
-    print(morseDict)
     outStr = ""
     for ch in inString:
         outStr = outStr + morseDict[ch] + " "
-    
+    print(outStr)
+    return outStr   
+
+
+def morseStringToAudio(inString):   #takes input string in morse code, creates audio file of morse code
+    out = np.empty([])
+    unitLen = .05
+    for ch in inString:
+        if ch == ".":
+            out = np.concatenate((out, genSinWave(unitLen*1)), axis=None)
+            out = np.concatenate((out, genBlank(unitLen*1)), axis=None)
+        elif ch == "-":
+            out = np.concatenate((out, genSinWave(unitLen*3)), axis=None)
+            out = np.concatenate((out, genBlank(unitLen*1)), axis=None)
+        elif ch == " ":
+            out = np.concatenate((out, genBlank(unitLen*2)), axis=None)
+    return out
+        
 
 def readWav(filename):
     Fs, data = read(filename)
@@ -90,13 +104,20 @@ def mixAudio(data1, data2):
 
 
 if __name__ == "__main__":
-    #out = genSinWave(10)
-    #write("out.wav", Fs, out)
+    #default string is SOS
+    if len(sys.argv) == 1:
+        englishStr = "SOS"
+    else:
+        englishStr = sys.argv[1]
+    englishStr = englishStr.upper()
+
+    #frequency sample rate is 44100
     Fs = 44100
-    morse = stringToMorse("SOS") # generates data for SOS in morse code (returns numpy array)
-    #write("morse.wav", Fs, morse)
-    #playAudio("morse.wav")
-    out = np.empty([])
+    morseStr = stringToMorse(englishStr)      # generates data for moString in morse code (returns string of morse code)
+    morse = morseStringToAudio(morseStr)    # generates waveform from morse code string
+    write("morse.wav", Fs, morse)
+    playAudio("morse.wav")
+    #out = np.empty([])
     #for x in range(5):
     #    out = np.concatenate((out, genSinWave(1)), axis=None)
     #    out = np.concatenate((out, genNoise(1)), axis=None)
