@@ -53,7 +53,16 @@ def beep(length): #returns a small length array for use to add to another array
     pass
 
 def stringToMorse(inString): #takes input string, converts to array of chars. for each char, adds morse code and then converts to beeps
-    pass
+    #first make dict from file
+    f = open("morse.txt", "r")
+    morseDict = {}
+    for line in f:
+        morseDict[line[0]] = line[1:-1]
+    print(morseDict)
+    outStr = ""
+    for ch in inString:
+        outStr = outStr + morseDict[ch] + " "
+    
 
 def readWav(filename):
     Fs, data = read(filename)
@@ -88,10 +97,10 @@ if __name__ == "__main__":
     #write("morse.wav", Fs, morse)
     #playAudio("morse.wav")
     out = np.empty([])
-    for x in range(5):
-        out = np.concatenate((out, genSinWave(1)), axis=None)
-        out = np.concatenate((out, genNoise(1)), axis=None)
-        out = np.concatenate((out, genBlank(1)), axis=None)
-    plotWav(out)
-    write("out.wav", Fs, out)
-    playAudio("out.wav")
+    #for x in range(5):
+    #    out = np.concatenate((out, genSinWave(1)), axis=None)
+    #    out = np.concatenate((out, genNoise(1)), axis=None)
+    #    out = np.concatenate((out, genBlank(1)), axis=None)
+    #plotWav(out)
+    #write("out.wav", Fs, out)
+    #playAudio("out.wav")
