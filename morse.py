@@ -19,6 +19,8 @@ def plotWav(data):
     plt.title("waveform of audio")
     plt.show()
 
+def matchArray(data1, data2, fillType):
+    pass
 
 def genSinWave(playSeconds):
     Fs = 44100
@@ -87,21 +89,27 @@ def readWav(filename):
     print("length of data: ", len(data))
     print("divided by freq (seconds of audio): ", len(data)/Fs)
 
-def mixAudio(data1, data2):
+def mixAudio(data1, data2, amtD1, amtD2):   #takes 2 np arrays and 2 values 
     for x in range(len(data1)):
-        data1[x] = .5*data1[x]
+        data1[x] = amtD1*data1[x]
     for x in range(len(data2)):
-        data2[x] = .5*data2[x]
+        data2[x] = amtD2*data2[x]
     # check if arrays are same length, if not, broadcast and then .add(a,b)
     len1 = len(data1)
     len2 = len(data2)
     if len1 !=len2:
         if len1<len2:
-            np.pad(data1, (0,len2-len1), 'constant')
+            print(len(data1),len(data2))
+            data1 = np.concatenate((data1, np.zeros(len2-len1)), axis=None)
         else:
-            np.pad(data2, (0,len1-len2), 'constant')
-    output = data1+data2
+            # TODO fix it so this actually pads 
+            # data 1 is longer than data 2
+            print(len(data1),len(data2))
+            data2 = np.concatenate((data2, np.zeros(len1-len2)), axis=None)
 
+    print(len(data1), len(data2))
+    output = data1+data2
+    return output
 
 if __name__ == "__main__":
     #default string is SOS
@@ -115,8 +123,11 @@ if __name__ == "__main__":
     Fs = 44100
     morseStr = stringToMorse(englishStr)      # generates data for moString in morse code (returns string of morse code)
     morse = morseStringToAudio(morseStr)    # generates waveform from morse code string
-    write("morse.wav", Fs, morse)
-    playAudio("morse.wav")
+    # mix morse with noise generated of same length
+    noise = genNoise(len(morse)/Fs)
+    out = mixAudio(noise, morse, .1, .9)
+    write("out.wav", Fs, out)
+    playAudio("out.wav")
     #out = np.empty([])
     #for x in range(5):
     #    out = np.concatenate((out, genSinWave(1)), axis=None)
